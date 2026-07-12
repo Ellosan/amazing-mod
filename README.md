@@ -1,5 +1,7 @@
 # Amazing™ — Earth's Blockiest Store
 
+[![Build](https://github.com/Ellosan/amazing-mod/actions/workflows/build.yml/badge.svg)](https://github.com/Ellosan/amazing-mod/actions/workflows/build.yml)
+
 A Fabric mod for **Minecraft 1.21.1** that brings vehicles and *Amazing*, the
 blocky online megastore, into your world. Order from a catalog of 130+
 products, watch a real delivery van drive up to your base, and get your
@@ -61,9 +63,17 @@ multiplayer** (client + server).
 | `/amazing quest abandon` | Abandon it (HR will be notified) |
 | `/amazing balance` | Emerald wallet + Prime status |
 
+## Downloading
+
+Every push to `main` builds the mod automatically — grab the latest jar
+from the [Actions tab](https://github.com/Ellosan/amazing-mod/actions/workflows/build.yml)
+(open the newest run → *Artifacts* → `amazing-mod`). Published
+[Releases](https://github.com/Ellosan/amazing-mod/releases) have the jar
+attached directly.
+
 ## Building
 
-Requirements: **Java 21**.
+Requirements: **Java 21+** (CI builds with Temurin 21).
 
 ```bash
 ./gradlew build
