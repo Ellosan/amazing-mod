@@ -3,6 +3,12 @@ name: Release
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v1.0.0)'
+        required: true
+        default: 'v1.0.0'
 
 permissions:
   contents: write
@@ -27,7 +33,16 @@ jobs:
         run: ./gradlew build
 
       - name: Create release with jars
-        uses: softprops/action-gh-release@v2
-        with:
-          files: build/libs/*.jar
-          generate_release_notes: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release upload "$TAG" build/libs/*.jar --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$TAG" build/libs/*.jar \
+              --title "Amazing™ $TAG" \
+              --generate-notes \
+              --target "$GITHUB_SHA" \
+              --repo "$GITHUB_REPOSITORY"
+          fi
