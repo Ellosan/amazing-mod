@@ -109,9 +109,8 @@ public class AmazingTitleScreen extends Screen {
 
 		context.drawTextWithShadow(this.textRenderer,
 				Text.literal("Amazing Edition v1.0 (Minecraft 1.21.1)"), 2, this.height - 10, 0xFFDDDDDD);
-		String disclaimer = "Not affiliated with any rainforest";
-		context.drawTextWithShadow(this.textRenderer, Text.literal(disclaimer),
-				this.width - this.textRenderer.getWidth(disclaimer) - 86, this.height - 10, 0xFF888888);
+		context.drawTextWithShadow(this.textRenderer, Text.literal("Not affiliated with any rainforest"),
+				2, this.height - 20, 0xFF888888);
 	}
 
 	private void renderScenery(DrawContext context, float time) {

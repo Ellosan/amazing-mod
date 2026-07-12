@@ -57,7 +57,7 @@ public class CatalogScreen extends Screen {
 		// --- Department tabs (two rows) ---
 		int tabY = this.panelTop + 26;
 		int tabWidth = (this.panelWidth - 8) / 5;
-		List<@Nullable Product.Category> tabs = new ArrayList<>();
+		List<Product.Category> tabs = new ArrayList<>();
 		tabs.add(null); // "All"
 		tabs.addAll(List.of(Product.Category.values()));
 		for (int i = 0; i < tabs.size(); i++) {

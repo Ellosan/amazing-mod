@@ -66,6 +66,9 @@ public class DeliveryWorkerEntity extends PathAwareEntity {
 
 	public DeliveryWorkerEntity(EntityType<? extends PathAwareEntity> type, World world) {
 		super(type, world);
+		// Couriers never clock out on their own; mission couriers discard
+		// themselves when the job is done.
+		this.setPersistent();
 	}
 
 	public static DefaultAttributeContainer.Builder createWorkerAttributes() {
