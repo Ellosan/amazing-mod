@@ -10,7 +10,7 @@ import net.minecraft.item.ItemStack;
  * @param name     marketing name shown in the catalog
  * @param item     the item that gets delivered
  * @param count    how many items one order contains
- * @param price    price in emeralds
+ * @param price    base price (dollars = price x 3)
  * @param category catalog department
  * @param prime    Prime-exclusive listings require an Amazing Prime Card in the inventory
  */
@@ -18,6 +18,11 @@ public record Product(String id, String name, Item item, int count, int price, C
 
 	public ItemStack createStack() {
 		return new ItemStack(item, count);
+	}
+
+	/** Price in MineBank dollars. */
+	public int dollars() {
+		return price * 3;
 	}
 
 	public enum Category {
@@ -28,6 +33,7 @@ public record Product(String id, String name, Item item, int count, int price, C
 		REDSTONE("Amazing Basics Tech"),
 		FARMING("Garden & Pets"),
 		BREWING("Health & Alchemy"),
+		TECH("Furniture & Tech"),
 		RARE("Prime Exclusives");
 
 		public final String displayName;

@@ -14,9 +14,9 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Saved Amazing data: pending orders and per-player quest progress.
- * Stored with the overworld so it works identically in singleplayer
- * and on dedicated servers.
+ * Saved Amazing data: pending orders, per-player quest progress, and
+ * MineBank accounts (balance + Prime subscription). Stored with the
+ * overworld so it works identically in singleplayer and on servers.
  */
 public class AmazingWorldState extends PersistentState {
 	private static final String STORAGE_KEY = "amazing_state";
@@ -26,6 +26,7 @@ public class AmazingWorldState extends PersistentState {
 
 	public final List<PendingOrder> orders = new ArrayList<>();
 	public final Map<UUID, QuestData> quests = new HashMap<>();
+	public final Map<UUID, BankAccount> accounts = new HashMap<>();
 
 	public static AmazingWorldState get(MinecraftServer server) {
 		return server.getOverworld().getPersistentStateManager().getOrCreate(TYPE, STORAGE_KEY);
@@ -33,6 +34,10 @@ public class AmazingWorldState extends PersistentState {
 
 	public QuestData questData(UUID playerUuid) {
 		return this.quests.computeIfAbsent(playerUuid, uuid -> new QuestData());
+	}
+
+	public BankAccount account(UUID playerUuid) {
+		return this.accounts.computeIfAbsent(playerUuid, uuid -> new BankAccount());
 	}
 
 	public static AmazingWorldState fromNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
@@ -47,6 +52,12 @@ public class AmazingWorldState extends PersistentState {
 		for (int i = 0; i < questList.size(); i++) {
 			NbtCompound entry = questList.getCompound(i);
 			state.quests.put(entry.getUuid("Player"), QuestData.fromNbt(entry));
+		}
+
+		NbtList accountList = nbt.getList("Accounts", NbtElement.COMPOUND_TYPE);
+		for (int i = 0; i < accountList.size(); i++) {
+			NbtCompound entry = accountList.getCompound(i);
+			state.accounts.put(entry.getUuid("Player"), BankAccount.fromNbt(entry));
 		}
 
 		return state;
@@ -67,6 +78,14 @@ public class AmazingWorldState extends PersistentState {
 			questList.add(questNbt);
 		}
 		nbt.put("Quests", questList);
+
+		NbtList accountList = new NbtList();
+		for (Map.Entry<UUID, BankAccount> entry : this.accounts.entrySet()) {
+			NbtCompound accountNbt = entry.getValue().toNbt();
+			accountNbt.putUuid("Player", entry.getKey());
+			accountList.add(accountNbt);
+		}
+		nbt.put("Accounts", accountList);
 
 		return nbt;
 	}
@@ -97,6 +116,29 @@ public class AmazingWorldState extends PersistentState {
 		public static PendingOrder fromNbt(NbtCompound nbt) {
 			return new PendingOrder(nbt.getUuid("Customer"), nbt.getString("Product"),
 					Math.max(1, nbt.getInt("Quantity")), nbt.getInt("TicksLeft"));
+		}
+	}
+
+	/** A MineBank account. */
+	public static class BankAccount {
+		public static final int STARTING_BALANCE = 250;
+
+		public int balance = STARTING_BALANCE;
+		/** World time (ticks) until which Prime is active. */
+		public long primeUntil;
+
+		public NbtCompound toNbt() {
+			NbtCompound nbt = new NbtCompound();
+			nbt.putInt("Balance", this.balance);
+			nbt.putLong("PrimeUntil", this.primeUntil);
+			return nbt;
+		}
+
+		public static BankAccount fromNbt(NbtCompound nbt) {
+			BankAccount account = new BankAccount();
+			account.balance = nbt.getInt("Balance");
+			account.primeUntil = nbt.getLong("PrimeUntil");
+			return account;
 		}
 	}
 

@@ -10,6 +10,28 @@ multiplayer** (client + server).
 
 ![Amazing delivery van in a village](docs/template.jpg)
 
+## What's new in 2.0
+
+- 🏙️ **Amazing City world type** — select *Amazing City* when creating a world
+  (or `level-type=amazing:city` on servers): infinite procedural city with
+  roads, furnished houses, apartment towers, parks, street lamps, corner
+  ATMs, and Amazing **warehouses stacked with packages** staffed by couriers
+- 🧑‍🤝‍🧑 **Citizens** — custom-skinned NPCs (4 skins, generated names) who live in
+  the city, chat when clicked, and receive deliveries
+- 💵 **MineBank economy** — dollars replace emeralds: bank accounts, cash
+  banknotes, **working ATMs** (withdraw/deposit/sell emeralds), e-banking,
+  and player-to-player transfers
+- ⭐ **Prime subscription** — $20 per 30 in-game days unlocks Prime
+  Exclusives (gift cards redeem 30 days)
+- 📱 **AmazingPhone X** — apps for Amazing (catalog + live order tracking),
+  MineBank, GPS (coords, heading, waypoints), Quests, **internet Radio**
+  (streams real Ogg Vorbis stations), and prank calls
+- 🛋️ **Working furniture & tech** — sittable chairs, tables, togglable lamps,
+  a TV that switches on, all placeable and sold in the catalog
+- 🏎️ **Amazing Roadster** — a faster second vehicle
+- 🐛 Fixed: quest packages can now actually be handed to villagers (the
+  trade screen no longer eats the click)
+
 ## Features
 
 ### 🚚 Drivable vans
@@ -24,9 +46,9 @@ multiplayer** (client + server).
 - **130+ products** across 8 departments: Tools & DIY, Combat & Outdoors,
   Grocery, Home & Building, Amazing Basics Tech, Garden & Pets,
   Health & Alchemy, and Prime Exclusives
-- Pay in emeralds; shift-click **Buy** for a 4-pack
+- Pay in MineBank dollars; shift-click **Buy** for a 4-pack
 - **Prime Exclusives** (elytra, totems, shulker boxes, your own van…)
-  require carrying an Amazing Prime Card
+  require an active Prime subscription
 
 ### 📦 Real deliveries
 - Orders dispatch an autonomous **delivery van** that drives to you
@@ -42,7 +64,7 @@ multiplayer** (client + server).
   - **Courier runs** — hand-deliver a package to a villager
   - **Supply runs** — restock the warehouse
   - **Express reviews** — order something and receive it
-- Emerald rewards, plus milestones: a free **Prime Card** after 3 quests
+- Dollar rewards paid straight to your account, plus milestones: a free **Prime Card** after 3 quests
   and your **own van** after 6
 - `/amazing quest` to check, `/amazing quest abandon` to give up
 
@@ -79,7 +101,7 @@ Requirements: **Java 21+** (CI builds with Temurin 21).
 ./gradlew build
 ```
 
-The mod jar lands in `build/libs/amazing-1.0.0.jar`. Drop it into your
+The mod jar lands in `build/libs/amazing-2.0.0.jar`. Drop it into your
 `mods/` folder together with the **Fabric API** for 1.21.1. Install on both
 the client and the server (single-player works out of the box).
 

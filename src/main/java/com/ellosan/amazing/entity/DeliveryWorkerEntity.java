@@ -164,11 +164,11 @@ public class DeliveryWorkerEntity extends PathAwareEntity {
 			serverWorld.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_PLAYER_LEVELUP,
 					SoundCategory.NEUTRAL, 0.6f, 1.5f);
 			QuestManager.onDeliveryReceived(player);
-		} else if (customer instanceof VillagerEntity villager) {
-			// Villagers unbox on the spot and are delighted about it.
+		} else if (customer instanceof VillagerEntity || customer instanceof CitizenEntity) {
+			// NPCs unbox on the spot and are delighted about it.
 			serverWorld.spawnParticles(ParticleTypes.HAPPY_VILLAGER,
-					villager.getX(), villager.getY() + 1.5, villager.getZ(), 10, 0.4, 0.4, 0.4, 0.0);
-			villager.playSound(SoundEvents.ENTITY_VILLAGER_YES, 1.0f, 1.0f);
+					customer.getX(), customer.getY() + 1.5, customer.getZ(), 10, 0.4, 0.4, 0.4, 0.0);
+			customer.playSound(SoundEvents.ENTITY_VILLAGER_YES, 1.0f, 1.0f);
 			this.packageStack = ItemStack.EMPTY;
 		} else if (!this.packageStack.isEmpty() && !timedOut) {
 			this.dropStack(this.packageStack);

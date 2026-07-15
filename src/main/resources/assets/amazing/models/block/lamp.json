@@ -1,0 +1,107 @@
+{
+ "parent": "minecraft:block/block",
+ "textures": {
+  "base": "minecraft:block/polished_blackstone",
+  "pole": "minecraft:block/gold_block",
+  "shade": "minecraft:block/white_wool",
+  "particle": "minecraft:block/white_wool"
+ },
+ "elements": [
+  {
+   "from": [
+    5,
+    0,
+    5
+   ],
+   "to": [
+    11,
+    2,
+    11
+   ],
+   "faces": {
+    "north": {
+     "texture": "#base"
+    },
+    "south": {
+     "texture": "#base"
+    },
+    "east": {
+     "texture": "#base"
+    },
+    "west": {
+     "texture": "#base"
+    },
+    "up": {
+     "texture": "#base"
+    },
+    "down": {
+     "texture": "#base"
+    }
+   }
+  },
+  {
+   "from": [
+    7,
+    2,
+    7
+   ],
+   "to": [
+    9,
+    10,
+    9
+   ],
+   "faces": {
+    "north": {
+     "texture": "#pole"
+    },
+    "south": {
+     "texture": "#pole"
+    },
+    "east": {
+     "texture": "#pole"
+    },
+    "west": {
+     "texture": "#pole"
+    },
+    "up": {
+     "texture": "#pole"
+    },
+    "down": {
+     "texture": "#pole"
+    }
+   }
+  },
+  {
+   "from": [
+    4,
+    10,
+    4
+   ],
+   "to": [
+    12,
+    16,
+    12
+   ],
+   "faces": {
+    "north": {
+     "texture": "#shade"
+    },
+    "south": {
+     "texture": "#shade"
+    },
+    "east": {
+     "texture": "#shade"
+    },
+    "west": {
+     "texture": "#shade"
+    },
+    "up": {
+     "texture": "#shade"
+    },
+    "down": {
+     "texture": "#shade"
+    }
+   }
+  }
+ ]
+}

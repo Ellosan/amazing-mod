@@ -1,11 +1,13 @@
 package com.ellosan.amazing.quest;
 
 import com.ellosan.amazing.delivery.AmazingWorldState;
+import com.ellosan.amazing.economy.BankManager;
 import com.ellosan.amazing.delivery.DeliveryManager;
 import com.ellosan.amazing.entity.DeliveryWorkerEntity;
 import com.ellosan.amazing.registry.ModComponents;
 import com.ellosan.amazing.registry.ModItems;
 
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.Item;
@@ -96,7 +98,7 @@ public final class QuestManager {
 				String questId = UUID.randomUUID().toString().substring(0, 8);
 				data.activeType = TYPE_COURIER;
 				data.questId = questId;
-				data.reward = 6 + random.nextInt(7);
+				data.reward = 20 + random.nextInt(21);
 
 				ItemStack questPackage = new ItemStack(ModItems.PACKAGE);
 				questPackage.set(ModComponents.QUEST_TAG, questId);
@@ -106,26 +108,26 @@ public final class QuestManager {
 				}
 
 				say(player, worker, "We're swamped! Take this package and hand it to any villager for me. "
-						+ "Pay is " + data.reward + " emeralds.");
+						+ "Pay is $" + data.reward + ".");
 			}
 			case 1 -> { // Supply quest
 				SupplyRequest request = SUPPLY_REQUESTS.get(random.nextInt(SUPPLY_REQUESTS.size()));
 				data.activeType = TYPE_SUPPLY;
 				data.targetItemId = Registries.ITEM.getId(request.item()).toString();
 				data.targetCount = request.count();
-				data.reward = request.reward();
+				data.reward = request.reward() * 3;
 
 				say(player, worker, "The warehouse is running low on stock. Bring me " + request.count()
-						+ "x " + request.item().getName().getString() + " and I'll pay you "
-						+ data.reward + " emeralds.");
+						+ "x " + request.item().getName().getString() + " and I'll pay you $"
+						+ data.reward + ".");
 			}
 			default -> { // Express quest
 				data.activeType = TYPE_EXPRESS;
-				data.reward = 8;
+				data.reward = 25;
 
 				say(player, worker, "Corporate wants five-star reviews! Place any order from our catalog "
-						+ "(press O or use a Prime Card) and receive the delivery. " + data.reward
-						+ " emeralds for your trouble.");
+						+ "(press O or use a Prime Card) and receive the delivery. $" + data.reward
+						+ " for your trouble.");
 			}
 		}
 
@@ -136,11 +138,11 @@ public final class QuestManager {
 	private static String questReminder(AmazingWorldState.QuestData data) {
 		return switch (data.activeType) {
 			case TYPE_COURIER -> "Still holding my package? Right-click any villager with it! ("
-					+ data.reward + " emeralds)";
+					+ "$" + data.reward + ")";
 			case TYPE_SUPPLY -> "Got my " + data.targetCount + "x " + targetItemName(data)
-					+ " yet? Bring them to me! (" + data.reward + " emeralds)";
+					+ " yet? Bring them to me! (" + "$" + data.reward + ")";
 			case TYPE_EXPRESS -> "Order something from the catalog (press O) and receive it! ("
-					+ data.reward + " emeralds)";
+					+ "$" + data.reward + ")";
 			default -> "Have a great Amazing day!";
 		};
 	}
@@ -197,8 +199,8 @@ public final class QuestManager {
 		completeQuest(player, state, data);
 	}
 
-	/** Called from PackageItem when a quest package is handed to a villager. */
-	public static void deliverQuestPackage(ServerPlayerEntity player, VillagerEntity villager, ItemStack stack) {
+	/** Called when a quest package is handed to a villager or citizen. */
+	public static void deliverQuestPackage(ServerPlayerEntity player, LivingEntity customer, ItemStack stack) {
 		MinecraftServer server = player.getServer();
 		if (server == null) {
 			return;
@@ -216,9 +218,9 @@ public final class QuestManager {
 		stack.decrement(1);
 		if (player.getWorld() instanceof ServerWorld serverWorld) {
 			serverWorld.spawnParticles(ParticleTypes.HAPPY_VILLAGER,
-					villager.getX(), villager.getY() + 1.5, villager.getZ(), 10, 0.4, 0.4, 0.4, 0.0);
+					customer.getX(), customer.getY() + 1.5, customer.getZ(), 10, 0.4, 0.4, 0.4, 0.0);
 		}
-		villager.playSound(SoundEvents.ENTITY_VILLAGER_YES, 1.0f, 1.0f);
+		customer.playSound(SoundEvents.ENTITY_VILLAGER_YES, 1.0f, 1.0f);
 
 		completeQuest(player, state, data);
 	}
@@ -244,15 +246,12 @@ public final class QuestManager {
 		data.clearActive();
 		state.markDirty();
 
-		ItemStack emeralds = new ItemStack(Items.EMERALD, reward);
-		if (!player.giveItemStack(emeralds)) {
-			player.dropItem(emeralds, false);
-		}
+		BankManager.deposit(player, reward);
 
 		player.getWorld().playSound(null, player.getBlockPos(), SoundEvents.ENTITY_PLAYER_LEVELUP,
 				SoundCategory.PLAYERS, 0.8f, 1.2f);
 		player.sendMessage(Text.literal("[Amazing] ").formatted(Formatting.GOLD)
-				.append(Text.literal("Quest complete! +" + reward + " emeralds. ("
+				.append(Text.literal("Quest complete! +$" + reward + " paid to your MineBank account. ("
 						+ completed + " quests done)").formatted(Formatting.GREEN)), false);
 
 		// Milestone bonuses.
@@ -296,7 +295,7 @@ public final class QuestManager {
 			case TYPE_EXPRESS -> "Express review: place a catalog order and receive the delivery.";
 			default -> data.activeType;
 		};
-		return Text.literal(description + " Reward: " + data.reward + " emeralds.")
+		return Text.literal(description + " Reward: $" + data.reward + ".")
 				.formatted(Formatting.YELLOW);
 	}
 }

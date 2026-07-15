@@ -1,7 +1,7 @@
 package com.ellosan.amazing.command;
 
 import com.ellosan.amazing.delivery.AmazingWorldState;
-import com.ellosan.amazing.delivery.DeliveryManager;
+import com.ellosan.amazing.economy.BankManager;
 import com.ellosan.amazing.net.OpenCatalogPayload;
 import com.ellosan.amazing.quest.QuestManager;
 import com.ellosan.amazing.shop.ProductCatalog;
@@ -76,8 +76,10 @@ public final class AmazingCommand {
 						})))
 				.then(CommandManager.literal("balance").executes(context -> {
 					ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-					player.sendMessage(Text.literal("[Amazing] Wallet: " + DeliveryManager.countEmeralds(player)
-							+ " emeralds" + (DeliveryManager.hasPrimeCard(player) ? " • Prime member ✔" : ""))
+					String prime = BankManager.hasPrime(player)
+							? " • Prime ✔ (" + BankManager.primeDaysLeft(player) + " days left)"
+							: " • No Prime";
+					player.sendMessage(Text.literal("[MineBank] Balance: $" + BankManager.balance(player) + prime)
 							.formatted(Formatting.GOLD), false);
 					return 1;
 				})));
@@ -88,7 +90,7 @@ public final class AmazingCommand {
 		source.sendFeedback(() -> Text.literal("/amazing shop — browse the catalog (or press O)").formatted(Formatting.YELLOW), false);
 		source.sendFeedback(() -> Text.literal("/amazing orders — track your deliveries").formatted(Formatting.YELLOW), false);
 		source.sendFeedback(() -> Text.literal("/amazing quest — view or abandon your quest").formatted(Formatting.YELLOW), false);
-		source.sendFeedback(() -> Text.literal("/amazing balance — check your emerald wallet").formatted(Formatting.YELLOW), false);
+		source.sendFeedback(() -> Text.literal("/amazing balance — check your MineBank account").formatted(Formatting.YELLOW), false);
 		return 1;
 	}
 }

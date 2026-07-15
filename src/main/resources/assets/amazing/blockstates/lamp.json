@@ -1,0 +1,10 @@
+{
+ "variants": {
+  "lit=true": {
+   "model": "amazing:block/lamp"
+  },
+  "lit=false": {
+   "model": "amazing:block/lamp"
+  }
+ }
+}

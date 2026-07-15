@@ -15,9 +15,19 @@ public class ModItemGroups {
 			.displayName(Text.translatable("itemGroup.amazing"))
 			.entries((displayContext, entries) -> {
 				entries.add(ModItems.PACKAGE);
+				entries.add(ModItems.PHONE);
+				entries.add(ModItems.CASH);
 				entries.add(ModItems.PRIME_CARD);
 				entries.add(ModItems.VAN);
+				entries.add(ModItems.CAR);
+				entries.add(ModBlocks.CHAIR);
+				entries.add(ModBlocks.TABLE);
+				entries.add(ModBlocks.LAMP);
+				entries.add(ModBlocks.TV);
+				entries.add(ModBlocks.ATM);
+				entries.add(ModBlocks.PACKAGE_BLOCK);
 				entries.add(ModItems.workerSpawnEgg);
+				entries.add(ModItems.citizenSpawnEgg);
 			})
 			.build();
 

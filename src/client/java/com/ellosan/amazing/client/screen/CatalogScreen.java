@@ -1,7 +1,8 @@
 package com.ellosan.amazing.client.screen;
 
+import com.ellosan.amazing.client.ClientEconomy;
 import com.ellosan.amazing.net.OrderPayload;
-import com.ellosan.amazing.registry.ModItems;
+import com.ellosan.amazing.net.RequestSyncPayload;
 import com.ellosan.amazing.shop.Product;
 import com.ellosan.amazing.shop.ProductCatalog;
 
@@ -10,8 +11,6 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
@@ -44,6 +43,7 @@ public class CatalogScreen extends Screen {
 
 	public CatalogScreen() {
 		super(Text.literal("Amazing Catalog"));
+		ClientPlayNetworking.send(new RequestSyncPayload());
 	}
 
 	@Override
@@ -162,41 +162,17 @@ public class CatalogScreen extends Screen {
 		return from >= to ? List.of() : this.filtered.subList(from, to);
 	}
 
-	private int emeraldBalance() {
-		if (this.client == null || this.client.player == null) {
-			return 0;
-		}
-		int total = 0;
-		var inventory = this.client.player.getInventory();
-		for (int i = 0; i < inventory.size(); i++) {
-			ItemStack stack = inventory.getStack(i);
-			if (stack.isOf(Items.EMERALD)) {
-				total += stack.getCount();
-			}
-		}
-		return total;
+	private boolean isCreative() {
+		return this.client != null && this.client.player != null
+				&& this.client.player.getAbilities().creativeMode;
 	}
 
 	private boolean isPrimeMember() {
-		if (this.client == null || this.client.player == null) {
-			return false;
-		}
-		if (this.client.player.getAbilities().creativeMode) {
-			return true;
-		}
-		var inventory = this.client.player.getInventory();
-		for (int i = 0; i < inventory.size(); i++) {
-			if (inventory.getStack(i).isOf(ModItems.PRIME_CARD)) {
-				return true;
-			}
-		}
-		return false;
+		return this.isCreative() || ClientEconomy.hasPrime();
 	}
 
 	private boolean canAfford(Product product) {
-		return (this.client != null && this.client.player != null
-				&& this.client.player.getAbilities().creativeMode)
-				|| this.emeraldBalance() >= product.price();
+		return this.isCreative() || ClientEconomy.balance >= product.dollars();
 	}
 
 	private boolean hasPrimeAccess(Product product) {
@@ -218,7 +194,7 @@ public class CatalogScreen extends Screen {
 				this.panelLeft + 6 + logoWidth + 8, this.panelTop + 8, 0xFFAAAAAA, false);
 
 		boolean prime = this.isPrimeMember();
-		String wallet = "Wallet: " + this.emeraldBalance() + " emeralds" + (prime ? "  •  PRIME ✔" : "");
+		String wallet = "MineBank: $" + ClientEconomy.balance + (prime ? "  •  PRIME ★" : "");
 		context.drawText(this.textRenderer, Text.literal(wallet),
 				this.panelLeft + this.panelWidth - this.textRenderer.getWidth(wallet) - 6,
 				this.panelTop + 8, prime ? 0xFFDD88FF : 0xFF55FF55, true);
@@ -241,7 +217,7 @@ public class CatalogScreen extends Screen {
 			context.drawText(this.textRenderer, Text.literal(name),
 					this.panelLeft + 28, y + 4, 0xFFFFFFFF, false);
 
-			String priceLine = product.price() + " emeralds"
+			String priceLine = "$" + product.dollars()
 					+ (product.prime() ? "  [PRIME]" : "");
 			int priceColor = this.hasPrimeAccess(product)
 					? (this.canAfford(product) ? 0xFF55FF55 : 0xFFFF5555)
@@ -286,6 +262,7 @@ public class CatalogScreen extends Screen {
 			case REDSTONE -> "Tech";
 			case FARMING -> "Garden";
 			case BREWING -> "Alchemy";
+			case TECH -> "Home Tech";
 			case RARE -> "Prime";
 		};
 	}

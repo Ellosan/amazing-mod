@@ -35,6 +35,21 @@ public class VanEntity extends Entity {
 	public static final float MAX_FORWARD_SPEED = 0.55f;
 	public static final float MAX_REVERSE_SPEED = 0.22f;
 
+	/** Top speed going forward, blocks/tick. Overridden by faster vehicles. */
+	protected float maxForwardSpeed() {
+		return MAX_FORWARD_SPEED;
+	}
+
+	/** Throttle response, blocks/tick². */
+	protected float acceleration() {
+		return 0.017f;
+	}
+
+	/** The item this vehicle packs back into. */
+	protected ItemStack asItemStack() {
+		return new ItemStack(ModItems.VAN);
+	}
+
 	// Driving inputs, set client-side by the driver (or server-side by AI).
 	protected boolean pressingForward;
 	protected boolean pressingBack;
@@ -111,7 +126,7 @@ public class VanEntity extends Entity {
 	protected void drive() {
 		// Throttle.
 		if (this.pressingForward) {
-			this.speed += 0.017f;
+			this.speed += this.acceleration();
 		} else if (this.pressingBack) {
 			this.speed -= 0.012f;
 		} else {
@@ -120,7 +135,7 @@ public class VanEntity extends Entity {
 		if (this.braking) {
 			this.speed *= 0.80f;
 		}
-		this.speed = MathHelper.clamp(this.speed, -MAX_REVERSE_SPEED, MAX_FORWARD_SPEED);
+		this.speed = MathHelper.clamp(this.speed, -MAX_REVERSE_SPEED, this.maxForwardSpeed());
 		if (Math.abs(this.speed) < 0.003f) {
 			this.speed = 0.0f;
 		}
@@ -225,7 +240,7 @@ public class VanEntity extends Entity {
 
 	protected void breakIntoItem(boolean dropItem) {
 		if (dropItem) {
-			this.dropStack(new ItemStack(ModItems.VAN));
+			this.dropStack(this.asItemStack());
 		}
 		this.getWorld().playSound(null, this.getBlockPos(), SoundEvents.ENTITY_IRON_GOLEM_DEATH,
 				SoundCategory.NEUTRAL, 0.7f, 1.4f);
@@ -269,7 +284,7 @@ public class VanEntity extends Entity {
 
 	@Override
 	public ItemStack getPickBlockStack() {
-		return new ItemStack(ModItems.VAN);
+		return this.asItemStack();
 	}
 
 	/** Current signed speed, for engine sounds and animation. */
