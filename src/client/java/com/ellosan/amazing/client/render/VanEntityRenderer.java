@@ -17,12 +17,18 @@ import net.minecraft.util.math.RotationAxis;
 public class VanEntityRenderer extends EntityRenderer<VanEntity> {
 	private final VanEntityModel model;
 	private final Identifier texture;
+	private final float scale;
 
 	public VanEntityRenderer(EntityRendererFactory.Context context, Identifier texture) {
+		this(context, texture, 1.0f);
+	}
+
+	public VanEntityRenderer(EntityRendererFactory.Context context, Identifier texture, float scale) {
 		super(context);
 		this.model = new VanEntityModel(context.getPart(AmazingModClient.VAN_LAYER));
 		this.texture = texture;
-		this.shadowRadius = 1.1f;
+		this.scale = scale;
+		this.shadowRadius = 1.1f * scale;
 	}
 
 	@Override
@@ -31,7 +37,7 @@ public class VanEntityRenderer extends EntityRenderer<VanEntity> {
 		matrices.push();
 		matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0f - yaw));
 		// Entity models are built y-down; flip into world space like living renderers do.
-		matrices.scale(-1.0f, -1.0f, 1.0f);
+		matrices.scale(-this.scale, -this.scale, this.scale);
 		matrices.translate(0.0f, -1.501f, 0.0f);
 
 		float wheelAngle = MathHelper.lerp(tickDelta, entity.prevWheelAngle, entity.wheelAngle);

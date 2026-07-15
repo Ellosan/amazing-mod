@@ -1,0 +1,19 @@
+{
+ "variants": {
+  "facing=north": {
+   "model": "amazing:block/atm"
+  },
+  "facing=east": {
+   "model": "amazing:block/atm",
+   "y": 90
+  },
+  "facing=south": {
+   "model": "amazing:block/atm",
+   "y": 180
+  },
+  "facing=west": {
+   "model": "amazing:block/atm",
+   "y": 270
+  }
+ }
+}

@@ -1,8 +1,8 @@
 package com.ellosan.amazing.item;
 
 import com.ellosan.amazing.entity.VanEntity;
-import com.ellosan.amazing.registry.ModEntities;
 
+import net.minecraft.entity.EntityType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUsageContext;
@@ -17,14 +17,18 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
- * Deploys a personal Amazing delivery van onto the clicked block.
+ * Deploys a personal Amazing vehicle onto the clicked block.
+ * Used for both the van and the roadster.
  */
 public class VanItem extends Item {
+	private final Supplier<EntityType<? extends VanEntity>> entityType;
 
-	public VanItem(Settings settings) {
+	public VanItem(Supplier<EntityType<? extends VanEntity>> entityType, Settings settings) {
 		super(settings);
+		this.entityType = entityType;
 	}
 
 	@Override
@@ -39,24 +43,24 @@ public class VanItem extends Item {
 			return ActionResult.PASS;
 		}
 
-		VanEntity van = ModEntities.VAN.create(world);
-		if (van == null) {
+		VanEntity vehicle = this.entityType.get().create(world);
+		if (vehicle == null) {
 			return ActionResult.FAIL;
 		}
 
 		float yaw = context.getPlayer() != null ? context.getPlayer().getYaw() : 0.0f;
-		van.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5, yaw, 0.0f);
+		vehicle.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5, yaw, 0.0f);
 
-		if (!world.isSpaceEmpty(van, van.getBoundingBox())) {
-			van.discard();
+		if (!world.isSpaceEmpty(vehicle, vehicle.getBoundingBox())) {
+			vehicle.discard();
 			if (context.getPlayer() != null) {
-				context.getPlayer().sendMessage(Text.literal("Not enough room to park the van here!")
+				context.getPlayer().sendMessage(Text.literal("Not enough room to park here!")
 						.formatted(Formatting.RED), true);
 			}
 			return ActionResult.FAIL;
 		}
 
-		world.spawnEntity(van);
+		world.spawnEntity(vehicle);
 		world.playSound(null, pos, SoundEvents.ENTITY_IRON_GOLEM_STEP, SoundCategory.NEUTRAL, 1.0f, 0.7f);
 
 		ItemStack stack = context.getStack();

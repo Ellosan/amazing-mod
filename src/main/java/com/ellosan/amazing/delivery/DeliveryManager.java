@@ -1,6 +1,8 @@
 package com.ellosan.amazing.delivery;
 
 import com.ellosan.amazing.AmazingMod;
+import com.ellosan.amazing.economy.BankManager;
+import com.ellosan.amazing.entity.CitizenEntity;
 import com.ellosan.amazing.entity.DeliveryVanEntity;
 import com.ellosan.amazing.registry.ModComponents;
 import com.ellosan.amazing.registry.ModEntities;
@@ -9,10 +11,9 @@ import com.ellosan.amazing.shop.Product;
 import com.ellosan.amazing.shop.ProductCatalog;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.passive.VillagerEntity;
-import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -76,69 +77,32 @@ public final class DeliveryManager {
 		}
 
 		boolean creative = player.getAbilities().creativeMode;
-		if (product.prime() && !creative && !hasPrimeCard(player)) {
-			player.sendMessage(Text.literal("[Amazing] That's a Prime Exclusive! Carry an Amazing Prime Card to order it.")
+		if (product.prime() && !BankManager.hasPrime(player)) {
+			player.sendMessage(Text.literal("[Amazing] That's a Prime Exclusive! Subscribe to Prime ($"
+					+ BankManager.PRIME_PRICE + "/month) in the MineBank app.")
 					.formatted(Formatting.LIGHT_PURPLE), false);
 			return;
 		}
 
-		int totalPrice = product.price() * quantity;
-		if (!creative && !chargeEmeralds(player, totalPrice)) {
-			player.sendMessage(Text.literal("[Amazing] Insufficient funds! That costs " + totalPrice
-					+ " emeralds.").formatted(Formatting.RED), false);
+		int totalPrice = product.dollars() * quantity;
+		if (!creative && !BankManager.charge(player, totalPrice)) {
+			player.sendMessage(Text.literal("[Amazing] Insufficient funds! That costs $" + totalPrice
+					+ " (balance: $" + BankManager.balance(player) + ").").formatted(Formatting.RED), false);
 			return;
 		}
 
 		int deliveryTicks = 20 * (25 + player.getRandom().nextInt(30));
 		state.orders.add(new AmazingWorldState.PendingOrder(player.getUuid(), productId, quantity, deliveryTicks));
 		state.markDirty();
+		BankManager.sync(player);
 
 		player.getWorld().playSound(null, player.getBlockPos(), SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP,
 				SoundCategory.PLAYERS, 0.7f, 1.8f);
 		player.sendMessage(Text.literal("[Amazing] ").formatted(Formatting.GOLD)
 				.append(Text.literal("Order confirmed: " + quantity + "x " + product.name()
-						+ (creative ? " (free for creative customers)" : " (" + totalPrice + " emeralds)")
+						+ (creative ? " (free for creative customers)" : " ($" + totalPrice + ")")
 						+ ". A van is on its way — ETA ~" + (deliveryTicks / 20) + "s!")
 						.formatted(Formatting.YELLOW)), false);
-	}
-
-	public static boolean hasPrimeCard(ServerPlayerEntity player) {
-		PlayerInventory inventory = player.getInventory();
-		for (int i = 0; i < inventory.size(); i++) {
-			if (inventory.getStack(i).isOf(ModItems.PRIME_CARD)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public static int countEmeralds(ServerPlayerEntity player) {
-		PlayerInventory inventory = player.getInventory();
-		int total = 0;
-		for (int i = 0; i < inventory.size(); i++) {
-			ItemStack stack = inventory.getStack(i);
-			if (stack.isOf(Items.EMERALD)) {
-				total += stack.getCount();
-			}
-		}
-		return total;
-	}
-
-	private static boolean chargeEmeralds(ServerPlayerEntity player, int amount) {
-		if (countEmeralds(player) < amount) {
-			return false;
-		}
-		PlayerInventory inventory = player.getInventory();
-		int remaining = amount;
-		for (int i = 0; i < inventory.size() && remaining > 0; i++) {
-			ItemStack stack = inventory.getStack(i);
-			if (stack.isOf(Items.EMERALD)) {
-				int take = Math.min(remaining, stack.getCount());
-				stack.decrement(take);
-				remaining -= take;
-			}
-		}
-		return true;
 	}
 
 	// ------------------------------------------------------------------
@@ -278,13 +242,14 @@ public final class DeliveryManager {
 
 	private static void tryAmbientVillagerDelivery(ServerPlayerEntity player) {
 		ServerWorld world = player.getServerWorld();
-		List<VillagerEntity> villagers = world.getEntitiesByClass(VillagerEntity.class,
-				Box.of(player.getPos(), 96, 32, 96), Entity::isAlive);
-		if (villagers.isEmpty()) {
+		List<LivingEntity> customers = world.getEntitiesByClass(LivingEntity.class,
+				Box.of(player.getPos(), 96, 32, 96),
+				entity -> entity.isAlive() && (entity instanceof VillagerEntity || entity instanceof CitizenEntity));
+		if (customers.isEmpty()) {
 			return;
 		}
 
-		VillagerEntity lucky = villagers.get(world.random.nextInt(villagers.size()));
+		LivingEntity lucky = customers.get(world.random.nextInt(customers.size()));
 		Product product = ProductCatalog.random(world.random);
 		ItemStack packageStack = buildPackage(List.of(product.createStack()), lucky.getName().getString());
 		dispatchVan(world, lucky, lucky.getBlockPos(), packageStack);

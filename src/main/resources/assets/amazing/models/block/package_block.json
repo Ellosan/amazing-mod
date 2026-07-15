@@ -1,0 +1,8 @@
+{
+ "parent": "minecraft:block/cube_bottom_top",
+ "textures": {
+  "side": "amazing:block/package_side",
+  "top": "amazing:block/package_top",
+  "bottom": "amazing:block/package_top"
+ }
+}

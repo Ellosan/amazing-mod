@@ -1,5 +1,6 @@
 package com.ellosan.amazing.shop;
 
+import com.ellosan.amazing.registry.ModBlocks;
 import com.ellosan.amazing.registry.ModItems;
 import com.ellosan.amazing.shop.Product.Category;
 
@@ -187,8 +188,17 @@ public final class ProductCatalog {
 		add("netherite_scrap", "DeepForge Netherite Scrap", Items.NETHERITE_SCRAP, 1, 48, Category.RARE, true);
 		add("shulker_box", "StoreIt INFINITE Shulker Box", Items.SHULKER_BOX, 1, 40, Category.RARE, true);
 		add("amazing_van", "Amazing Delivery Van (Own One Today!)", ModItems.VAN, 1, 50, Category.RARE, true);
-		add("prime_card", "Amazing Prime Membership Card", ModItems.PRIME_CARD, 1, 25, Category.RARE);
+		add("amazing_car", "Amazing Roadster (0-60 in 3 Blocks!)", ModItems.CAR, 1, 65, Category.RARE, true);
+		add("prime_card", "Amazing Prime Gift Card (30 Days)", ModItems.PRIME_CARD, 1, 10, Category.RARE);
 		add("empty_package", "Amazing Collectible Empty Box 4-Pack", ModItems.PACKAGE, 4, 1, Category.RARE);
+
+		// ----- Furniture & Tech (Amazing Home™) -----
+		add("phone", "AmazingPhone X (GPS, Banking, Radio!)", ModItems.PHONE, 1, 12, Category.TECH);
+		add("chair", "SitTight Designer Chair 2-Pack", ModBlocks.CHAIR.asItem(), 2, 3, Category.TECH);
+		add("table", "FlatPack Table (Assembly Not Required)", ModBlocks.TABLE.asItem(), 1, 3, Category.TECH);
+		add("lamp", "GlowUp Standing Lamp 2-Pack", ModBlocks.LAMP.asItem(), 2, 4, Category.TECH);
+		add("tv", "AMZ 55\" UltraBlock TV", ModBlocks.TV.asItem(), 1, 10, Category.TECH);
+		add("atm_block", "MineBank Home ATM (Yes, Really)", ModBlocks.ATM.asItem(), 1, 30, Category.TECH, true);
 	}
 
 	private ProductCatalog() {
