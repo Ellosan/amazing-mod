@@ -23,6 +23,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.HeightLimitView;
+import net.minecraft.world.StructureWorldAccess;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.biome.source.BiomeSource;
@@ -70,7 +71,10 @@ public class CityChunkGenerator extends ChunkGenerator {
 		HOUSES,
 		TOWER,
 		PARK,
-		WAREHOUSE
+		WAREHOUSE,
+		OFFICE,
+		BANK,
+		CINEMA
 	}
 
 	public CityChunkGenerator(BiomeSource biomeSource) {
@@ -98,13 +102,22 @@ public class CityChunkGenerator extends ChunkGenerator {
 		}
 		long hash = cellSeed(worldSeed, cellX, cellZ);
 		int roll = (int) Math.floorMod(hash, 100);
-		if (roll < 8) {
+		if (roll < 3) {
 			return CellType.WAREHOUSE;
 		}
-		if (roll < 22) {
+		if (roll < 7) {
+			return CellType.BANK;
+		}
+		if (roll < 12) {
+			return CellType.CINEMA;
+		}
+		if (roll < 24) {
 			return CellType.PARK;
 		}
 		if (roll < 40) {
+			return CellType.OFFICE;
+		}
+		if (roll < 52) {
 			return CellType.TOWER;
 		}
 		return CellType.HOUSES;
@@ -162,7 +175,7 @@ public class CityChunkGenerator extends ChunkGenerator {
 		CellType type = cellType(worldSeed, Math.floorDiv(x, CELL), Math.floorDiv(z, CELL));
 		return switch (type) {
 			case PARK, HOUSES -> GRASS;
-			case TOWER, WAREHOUSE -> SIDEWALK;
+			case TOWER, WAREHOUSE, OFFICE, BANK, CINEMA -> SIDEWALK;
 		};
 	}
 
@@ -193,16 +206,13 @@ public class CityChunkGenerator extends ChunkGenerator {
 		CellType type = cellType(worldSeed, cellX, cellZ);
 
 		switch (type) {
-			case HOUSES -> {
-				// Four 11x11 lots, one house each (some lots stay gardens).
-				buildHouse(chunk, random, originX + 5, originZ + 5, seed);
-				buildHouse(chunk, random, originX + 17, originZ + 5, seed >> 8);
-				buildHouse(chunk, random, originX + 5, originZ + 17, seed >> 16);
-				buildHouse(chunk, random, originX + 17, originZ + 17, seed >> 24);
-			}
+			case HOUSES -> HouseGenerator.build(chunk, seed, originX, originZ);
+			case OFFICE -> OfficeGenerator.build(chunk, seed, originX, originZ);
 			case TOWER -> buildTower(chunk, random, originX + 9, originZ + 9, seed);
 			case PARK -> buildPark(chunk, random, originX, originZ, seed);
 			case WAREHOUSE -> buildWarehouse(chunk, originX, originZ, seed);
+			case BANK -> buildBank(chunk, originX, originZ, seed);
+			case CINEMA -> buildCinema(chunk, originX, originZ, seed);
 		}
 
 		// Street lamps at the four sidewalk corners of every cell.
@@ -216,62 +226,6 @@ public class CityChunkGenerator extends ChunkGenerator {
 			set(chunk, originX + 6, GROUND_Y + 1, originZ + 4,
 					ModBlocks.ATM.getDefaultState().with(HorizontalFacingBlock.FACING, Direction.SOUTH));
 		}
-	}
-
-	private void buildHouse(Chunk chunk, Random random, int x0, int z0, long variantSeed) {
-		if (Math.floorMod(variantSeed, 5) == 0) {
-			return; // empty garden lot
-		}
-		int size = 10;
-		int height = 5;
-		int y0 = GROUND_Y + 1;
-		BlockState wall = switch ((int) Math.floorMod(variantSeed >> 3, 4)) {
-			case 0 -> Blocks.WHITE_TERRACOTTA.getDefaultState();
-			case 1 -> Blocks.BRICKS.getDefaultState();
-			case 2 -> Blocks.ORANGE_TERRACOTTA.getDefaultState();
-			default -> Blocks.LIGHT_GRAY_TERRACOTTA.getDefaultState();
-		};
-		BlockState floor = Blocks.OAK_PLANKS.getDefaultState();
-		BlockState roof = Blocks.DARK_OAK_PLANKS.getDefaultState();
-
-		for (int dx = 0; dx < size; dx++) {
-			for (int dz = 0; dz < size; dz++) {
-				int x = x0 + dx;
-				int z = z0 + dz;
-				boolean edge = dx == 0 || dz == 0 || dx == size - 1 || dz == size - 1;
-
-				set(chunk, x, GROUND_Y, z, floor);
-				for (int dy = 0; dy < height; dy++) {
-					if (edge) {
-						boolean window = dy == 2 && (dx % 3 == 1 || dz % 3 == 1)
-								&& !(dx == 0 && dz == 0) && !(dx == size - 1 && dz == size - 1);
-						set(chunk, x, y0 + dy, z, window ? Blocks.GLASS.getDefaultState() : wall);
-					} else {
-						set(chunk, x, y0 + dy, z, AIR);
-					}
-				}
-				set(chunk, x, y0 + height, z, roof);
-			}
-		}
-
-		// Door opening facing south.
-		int doorX = x0 + size / 2;
-		int doorZ = z0 + size - 1;
-		set(chunk, doorX, y0, doorZ, AIR);
-		set(chunk, doorX, y0 + 1, doorZ, AIR);
-
-		// Furnishings: bed, table + chair, lamp, TV. Amazing Home™ approved.
-		set(chunk, x0 + 2, y0, z0 + 3,
-				Blocks.RED_BED.getDefaultState().with(BedBlock.PART, BedPart.HEAD).with(BedBlock.FACING, Direction.SOUTH));
-		set(chunk, x0 + 2, y0, z0 + 2,
-				Blocks.RED_BED.getDefaultState().with(BedBlock.PART, BedPart.FOOT).with(BedBlock.FACING, Direction.SOUTH));
-		set(chunk, x0 + size - 3, y0, z0 + 2, ModBlocks.TABLE.getDefaultState());
-		set(chunk, x0 + size - 4, y0, z0 + 2,
-				ModBlocks.CHAIR.getDefaultState().with(HorizontalFacingBlock.FACING, Direction.EAST));
-		set(chunk, x0 + 2, y0, z0 + size - 3, ModBlocks.LAMP.getDefaultState().with(LampBlock.LIT, true));
-		set(chunk, x0 + size - 3, y0, z0 + size - 3,
-				ModBlocks.TV.getDefaultState().with(HorizontalFacingBlock.FACING, Direction.NORTH)
-						.with(TvBlock.ON, random.nextBoolean()));
 	}
 
 	private void buildTower(Chunk chunk, Random random, int x0, int z0, long variantSeed) {
@@ -305,7 +259,7 @@ public class CityChunkGenerator extends ChunkGenerator {
 			}
 		}
 
-		// Lobby door + a lamp inside each floor.
+		// Lobby door, per-floor lamp + chair, and an express elevator column.
 		int doorX = x0 + size / 2;
 		set(chunk, doorX, GROUND_Y + 1, z0 + size - 1, AIR);
 		set(chunk, doorX, GROUND_Y + 2, z0 + size - 1, AIR);
@@ -314,6 +268,7 @@ public class CityChunkGenerator extends ChunkGenerator {
 			set(chunk, x0 + 2, base + 1, z0 + 2, ModBlocks.LAMP.getDefaultState().with(LampBlock.LIT, true));
 			set(chunk, x0 + size - 3, base + 1, z0 + size - 3,
 					ModBlocks.CHAIR.getDefaultState().with(HorizontalFacingBlock.FACING, Direction.WEST));
+			set(chunk, x0 + size - 3, base, z0 + 2, ModBlocks.ELEVATOR.getDefaultState());
 		}
 	}
 
@@ -414,6 +369,139 @@ public class CityChunkGenerator extends ChunkGenerator {
 		}
 	}
 
+
+	private void buildBank(Chunk chunk, int originX, int originZ, long seed) {
+		int x0 = originX + 6;
+		int z0 = originZ + 8;
+		int width = 20;
+		int depth = 15;
+		int height = 6;
+		int y0 = GROUND_Y + 1;
+		BlockState wall = Blocks.QUARTZ_BLOCK.getDefaultState();
+		BlockState pillar = Blocks.QUARTZ_PILLAR.getDefaultState();
+
+		for (int dx = 0; dx < width; dx++) {
+			for (int dz = 0; dz < depth; dz++) {
+				int x = x0 + dx;
+				int z = z0 + dz;
+				boolean edge = dx == 0 || dz == 0 || dx == width - 1 || dz == depth - 1;
+				set(chunk, x, GROUND_Y, z, Blocks.POLISHED_ANDESITE.getDefaultState());
+				for (int dy = 0; dy < height; dy++) {
+					if (edge) {
+						boolean window = dy >= 1 && dy <= 2 && dx % 3 == 1 && dz != 0;
+						boolean gold = dy == height - 2;
+						set(chunk, x, y0 + dy, z, window ? Blocks.GLASS.getDefaultState()
+								: (gold ? Blocks.GOLD_BLOCK.getDefaultState() : wall));
+					} else {
+						set(chunk, x, y0 + dy, z, AIR);
+					}
+				}
+				set(chunk, x, y0 + height, z, Blocks.SMOOTH_QUARTZ.getDefaultState());
+			}
+		}
+
+		// Grand entrance with pillars (south).
+		int doorX = x0 + width / 2;
+		for (int dx = -1; dx <= 1; dx++) {
+			set(chunk, doorX + dx, y0, z0 + depth - 1, AIR);
+			set(chunk, doorX + dx, y0 + 1, z0 + depth - 1, AIR);
+			set(chunk, doorX + dx, y0 + 2, z0 + depth - 1, AIR);
+		}
+		for (int dy = 0; dy < 4; dy++) {
+			set(chunk, doorX - 3, y0 + dy, z0 + depth, pillar);
+			set(chunk, doorX + 3, y0 + dy, z0 + depth, pillar);
+		}
+
+		// Teller counter with glass, ATMs on the west wall, waiting chairs.
+		for (int dx = 3; dx < width - 3; dx++) {
+			set(chunk, x0 + dx, y0, z0 + 5, ModBlocks.TABLE.getDefaultState());
+			set(chunk, x0 + dx, y0 + 1, z0 + 5, Blocks.GLASS_PANE.getDefaultState());
+		}
+		for (int i = 0; i < 3; i++) {
+			set(chunk, x0 + 1, y0, z0 + 7 + i * 2, ModBlocks.ATM.getDefaultState()
+					.with(HorizontalFacingBlock.FACING, Direction.EAST));
+		}
+		set(chunk, x0 + width - 3, y0, z0 + depth - 4,
+				ModBlocks.CHAIR.getDefaultState().with(HorizontalFacingBlock.FACING, Direction.WEST));
+		set(chunk, x0 + width - 3, y0, z0 + depth - 6,
+				ModBlocks.CHAIR.getDefaultState().with(HorizontalFacingBlock.FACING, Direction.WEST));
+		set(chunk, doorX, y0, z0 + depth - 4, ModBlocks.LAMP.getDefaultState().with(LampBlock.LIT, true));
+
+		// The vault: iron walls, gold and packages inside.
+		for (int dx = 1; dx < 8; dx++) {
+			for (int dy = 0; dy < 4; dy++) {
+				set(chunk, x0 + dx, y0 + dy, z0 + 3, Blocks.IRON_BLOCK.getDefaultState());
+			}
+		}
+		set(chunk, x0 + 4, y0, z0 + 3, AIR);
+		set(chunk, x0 + 4, y0 + 1, z0 + 3, AIR);
+		set(chunk, x0 + 2, y0, z0 + 1, Blocks.GOLD_BLOCK.getDefaultState());
+		set(chunk, x0 + 3, y0, z0 + 1, Blocks.GOLD_BLOCK.getDefaultState());
+		set(chunk, x0 + 5, y0, z0 + 1, ModBlocks.PACKAGE_BLOCK.getDefaultState());
+		set(chunk, x0 + 6, y0, z0 + 1, ModBlocks.PACKAGE_BLOCK.getDefaultState());
+		set(chunk, x0 + 6, y0 + 1, z0 + 1, Blocks.GOLD_BLOCK.getDefaultState());
+	}
+
+	private void buildCinema(Chunk chunk, int originX, int originZ, long seed) {
+		int x0 = originX + 4;
+		int z0 = originZ + 6;
+		int width = 24;
+		int depth = 18;
+		int height = 7;
+		int y0 = GROUND_Y + 1;
+		BlockState wall = Blocks.GRAY_CONCRETE.getDefaultState();
+
+		for (int dx = 0; dx < width; dx++) {
+			for (int dz = 0; dz < depth; dz++) {
+				int x = x0 + dx;
+				int z = z0 + dz;
+				boolean edge = dx == 0 || dz == 0 || dx == width - 1 || dz == depth - 1;
+				set(chunk, x, GROUND_Y, z, Blocks.RED_WOOL.getDefaultState());
+				for (int dy = 0; dy < height; dy++) {
+					set(chunk, x, y0 + dy, z, edge ? wall : AIR);
+				}
+				set(chunk, x, y0 + height, z, Blocks.BLACK_CONCRETE.getDefaultState());
+			}
+		}
+
+		// The big screen (north interior wall).
+		for (int dx = 6; dx < width - 6; dx++) {
+			for (int dy = 1; dy < 5; dy++) {
+				set(chunk, x0 + dx, y0 + dy, z0 + 1, ModBlocks.CINEMA_SCREEN.getDefaultState());
+			}
+		}
+
+		// Rows of seats with a center aisle.
+		for (int row = 0; row < 4; row++) {
+			int z = z0 + 6 + row * 2;
+			for (int dx = 3; dx < width - 3; dx++) {
+				if (Math.abs(x0 + dx - (x0 + width / 2)) < 2) {
+					continue; // aisle
+				}
+				if (dx % 2 == 1) {
+					set(chunk, x0 + dx, y0, z, ModBlocks.CHAIR.getDefaultState()
+							.with(HorizontalFacingBlock.FACING, Direction.NORTH));
+				}
+			}
+		}
+
+		// Entrance + marquee with the smile.
+		int doorX = x0 + width / 2;
+		for (int dx = -1; dx <= 1; dx++) {
+			set(chunk, doorX + dx, y0, z0 + depth - 1, AIR);
+			set(chunk, doorX + dx, y0 + 1, z0 + depth - 1, AIR);
+		}
+		for (int dx = 4; dx < width - 4; dx++) {
+			set(chunk, x0 + dx, y0 + 5, z0 + depth - 1, Blocks.ORANGE_CONCRETE.getDefaultState());
+		}
+		set(chunk, doorX - 3, y0 + 4, z0 + depth, ModBlocks.LAMP.getDefaultState().with(LampBlock.LIT, true));
+		set(chunk, doorX + 3, y0 + 4, z0 + depth, ModBlocks.LAMP.getDefaultState().with(LampBlock.LIT, true));
+
+		// Concessions: popcorn is a barrel, fight me.
+		set(chunk, x0 + 2, y0, z0 + depth - 3, ModBlocks.TABLE.getDefaultState());
+		set(chunk, x0 + 2, y0 + 1, z0 + depth - 3, Blocks.BARREL.getDefaultState());
+	}
+
 	private void placeStreetLamp(Chunk chunk, int x, int z) {
 		for (int dy = 1; dy <= 3; dy++) {
 			set(chunk, x, GROUND_Y + dy, z, Blocks.COBBLESTONE_WALL.getDefaultState());
@@ -422,7 +510,7 @@ public class CityChunkGenerator extends ChunkGenerator {
 	}
 
 	/** Sets a block only when the position falls inside this chunk. */
-	private static void set(Chunk chunk, int x, int y, int z, BlockState state) {
+	public static void set(Chunk chunk, int x, int y, int z, BlockState state) {
 		ChunkPos pos = chunk.getPos();
 		if (x >= pos.getStartX() && x <= pos.getEndX() && z >= pos.getStartZ() && z <= pos.getEndZ()) {
 			chunk.setBlockState(new BlockPos(x, y, z), state, false);
@@ -450,8 +538,8 @@ public class CityChunkGenerator extends ChunkGenerator {
 		CellType type = cellType(worldSeed, cellX, cellZ);
 		Random random = Random.create(cellSeed(worldSeed, cellX, cellZ));
 
-		if (type == CellType.HOUSES || type == CellType.TOWER || type == CellType.PARK) {
-			int count = type == CellType.TOWER ? 3 : 2;
+		if (type != CellType.WAREHOUSE) {
+			int count = type == CellType.TOWER || type == CellType.OFFICE ? 3 : 2;
 			for (int i = 0; i < count; i++) {
 				CitizenEntity citizen = ModEntities.CITIZEN.create(region.toServerWorld());
 				if (citizen != null) {
@@ -485,6 +573,12 @@ public class CityChunkGenerator extends ChunkGenerator {
 
 	@Override
 	public void buildSurface(ChunkRegion region, StructureAccessor structures, NoiseConfig noiseConfig, Chunk chunk) {
+	}
+
+	@Override
+	public void generateFeatures(StructureWorldAccess world, Chunk chunk, StructureAccessor structureAccessor) {
+		// No vanilla decoration: this is what used to spray lava springs,
+		// random lakes and stray trees over the streets. City ordinances.
 	}
 
 	@Override

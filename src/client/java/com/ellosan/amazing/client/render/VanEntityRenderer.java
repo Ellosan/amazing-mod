@@ -36,6 +36,15 @@ public class VanEntityRenderer extends EntityRenderer<VanEntity> {
 			VertexConsumerProvider vertexConsumers, int light) {
 		matrices.push();
 		matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0f - yaw));
+		// Body roll into turns + a soft suspension bob while moving.
+		float roll = MathHelper.clamp(entity.yawDelta * 1.2f, -6.0f, 6.0f);
+		matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(roll));
+		float speed = Math.abs(entity.getSpeed());
+		if (speed > 0.03f) {
+			float bob = MathHelper.sin((entity.age + tickDelta) * 0.9f) * Math.min(0.02f, speed * 0.05f);
+			matrices.translate(0.0f, bob, 0.0f);
+			matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-speed * 2.5f));
+		}
 		// Entity models are built y-down; flip into world space like living renderers do.
 		matrices.scale(-this.scale, -this.scale, this.scale);
 		matrices.translate(0.0f, -1.501f, 0.0f);

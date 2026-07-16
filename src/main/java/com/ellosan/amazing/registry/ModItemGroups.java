@@ -26,6 +26,11 @@ public class ModItemGroups {
 				entries.add(ModBlocks.TV);
 				entries.add(ModBlocks.ATM);
 				entries.add(ModBlocks.PACKAGE_BLOCK);
+				entries.add(ModBlocks.PC);
+				entries.add(ModBlocks.CONSOLE);
+				entries.add(ModBlocks.CINEMA_SCREEN);
+				entries.add(ModBlocks.ELEVATOR);
+				entries.add(ModBlocks.ESCALATOR);
 				entries.add(ModItems.workerSpawnEgg);
 				entries.add(ModItems.citizenSpawnEgg);
 			})

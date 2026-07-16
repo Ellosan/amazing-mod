@@ -199,6 +199,11 @@ public final class ProductCatalog {
 		add("lamp", "GlowUp Standing Lamp 2-Pack", ModBlocks.LAMP.asItem(), 2, 4, Category.TECH);
 		add("tv", "AMZ 55\" UltraBlock TV", ModBlocks.TV.asItem(), 1, 10, Category.TECH);
 		add("atm_block", "MineBank Home ATM (Yes, Really)", ModBlocks.ATM.asItem(), 1, 30, Category.TECH, true);
+		add("pc", "BlockStation Gaming PC", ModBlocks.PC.asItem(), 1, 15, Category.TECH);
+		add("console", "Amazing GameBox 360°", ModBlocks.CONSOLE.asItem(), 1, 12, Category.TECH);
+		add("cinema_screen", "HomeCinema Screen Tile 6-Pack", ModBlocks.CINEMA_SCREEN.asItem(), 6, 8, Category.TECH);
+		add("elevator", "SkyLift Elevator Pads 2-Pack", ModBlocks.ELEVATOR.asItem(), 2, 14, Category.TECH);
+		add("escalator", "StepMaster Escalator 8-Pack", ModBlocks.ESCALATOR.asItem(), 8, 12, Category.TECH);
 	}
 
 	private ProductCatalog() {

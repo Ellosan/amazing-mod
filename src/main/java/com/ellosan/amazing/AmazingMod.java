@@ -54,6 +54,7 @@ public class AmazingMod implements ModInitializer {
 				(dispatcher, registryAccess, environment) -> AmazingCommand.register(dispatcher));
 
 		ServerTickEvents.END_SERVER_TICK.register(DeliveryManager::tickServer);
+		ServerTickEvents.END_SERVER_TICK.register(com.ellosan.amazing.economy.ElevatorManager::tick);
 
 		ServerPlayConnectionEvents.JOIN.register(
 				(handler, sender, server) -> BankManager.sync(handler.getPlayer()));

@@ -1,0 +1,8 @@
+{
+ "parent": "minecraft:block/cube_bottom_top",
+ "textures": {
+  "top": "amazing:block/elevator_top",
+  "side": "amazing:block/elevator_side",
+  "bottom": "amazing:block/elevator_side"
+ }
+}

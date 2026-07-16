@@ -3,6 +3,7 @@ package com.ellosan.amazing.client.screen;
 import com.ellosan.amazing.client.ClientEconomy;
 import com.ellosan.amazing.client.sound.RadioPlayer;
 import com.ellosan.amazing.net.BankOpPayload;
+import com.ellosan.amazing.net.PhoneChatPayload;
 import com.ellosan.amazing.net.RequestSyncPayload;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -31,6 +32,7 @@ public class PhoneScreen extends Screen {
 		GPS("GPS"),
 		QUESTS("Quests"),
 		RADIO("Radio"),
+		CHAT("Chat"),
 		CALL("Phone");
 
 		final String title;
@@ -57,6 +59,9 @@ public class PhoneScreen extends Screen {
 
 	private TextFieldWidget urlField;
 	private TextFieldWidget transferField;
+	private TextFieldWidget chatField;
+	private TextFieldWidget chatTarget;
+	private String chatStatus = "";
 	private String callLine = "";
 
 	public PhoneScreen() {
@@ -76,6 +81,7 @@ public class PhoneScreen extends Screen {
 			case GPS -> this.initGps();
 			case QUESTS -> this.initQuests();
 			case RADIO -> this.initRadio();
+			case CHAT -> this.initChat();
 			case CALL -> this.initCall();
 		}
 
@@ -94,7 +100,7 @@ public class PhoneScreen extends Screen {
 	}
 
 	private void initHome() {
-		App[] apps = {App.AMAZING, App.BANK, App.GPS, App.QUESTS, App.RADIO, App.CALL};
+		App[] apps = {App.AMAZING, App.BANK, App.GPS, App.QUESTS, App.RADIO, App.CHAT, App.CALL};
 		for (int i = 0; i < apps.length; i++) {
 			final App target = apps[i];
 			int col = i % 2;
@@ -177,6 +183,29 @@ public class PhoneScreen extends Screen {
 				.dimensions(this.left + 92, y + 22, 74, 18).build());
 	}
 
+	private void initChat() {
+		this.chatTarget = new TextFieldWidget(this.textRenderer,
+				this.left + 14, this.top + 40, PHONE_WIDTH - 28, 14, Text.literal("to"));
+		this.chatTarget.setPlaceholder(Text.literal("to: everyone (or player name)").formatted(Formatting.DARK_GRAY));
+		this.addDrawableChild(this.chatTarget);
+
+		this.chatField = new TextFieldWidget(this.textRenderer,
+				this.left + 14, this.top + 60, PHONE_WIDTH - 28, 14, Text.literal("message"));
+		this.chatField.setMaxLength(256);
+		this.chatField.setPlaceholder(Text.literal("message...").formatted(Formatting.DARK_GRAY));
+		this.addDrawableChild(this.chatField);
+
+		this.addDrawableChild(ButtonWidget.builder(Text.literal("Send"), ignored -> {
+					String message = this.chatField.getText().strip();
+					if (!message.isEmpty()) {
+						ClientPlayNetworking.send(new PhoneChatPayload(this.chatTarget.getText().strip(), message));
+						this.chatField.setText("");
+						this.chatStatus = "Sent!";
+					}
+				})
+				.dimensions(this.left + 14, this.top + 80, PHONE_WIDTH - 28, 18).build());
+	}
+
 	private void initCall() {
 		String[][] contacts = {
 				{"Mom", "Mom: \"Are you eating enough golden carrots, sweetie?\""},
@@ -208,6 +237,12 @@ public class PhoneScreen extends Screen {
 		// Status bar.
 		context.drawText(this.textRenderer, Text.literal(this.app.title).formatted(Formatting.BOLD),
 				textLeft, this.top + 12, 0xFFFFFFFF, false);
+		long timeOfDay = this.client != null && this.client.world != null
+				? this.client.world.getTimeOfDay() % 24000 : 0;
+		String clock = String.format("%02d:%02d", (int) ((timeOfDay / 1000 + 6) % 24),
+				(int) (timeOfDay % 1000 * 60 / 1000));
+		context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(clock),
+				this.left + PHONE_WIDTH / 2, this.top + 12, 0xFFCCCCCC);
 		String balanceText = "$" + ClientEconomy.balance + (ClientEconomy.hasPrime() ? " ★" : "");
 		context.drawText(this.textRenderer, Text.literal(balanceText),
 				this.left + PHONE_WIDTH - 14 - this.textRenderer.getWidth(balanceText),
@@ -225,6 +260,12 @@ public class PhoneScreen extends Screen {
 					ClientEconomy.quest.isEmpty() ? "No quest data. Poke a courier!" : ClientEconomy.quest);
 			case RADIO -> context.drawText(this.textRenderer, Text.literal(RadioPlayer.status()),
 					textLeft, this.top + 36, 0xFFFFCC44, false);
+			case CHAT -> {
+				this.renderText(context, textLeft, this.top + 106,
+						this.chatStatus.isEmpty() ? "Messages appear in game chat." : this.chatStatus);
+				this.renderText(context, textLeft, this.top + 120,
+						"Voice chat? Install the Simple Voice Chat mod alongside Amazing.");
+			}
 			case CALL -> this.renderText(context, textLeft, this.top + 150,
 					this.callLine.isEmpty() ? "Who you gonna call?" : this.callLine);
 		}
