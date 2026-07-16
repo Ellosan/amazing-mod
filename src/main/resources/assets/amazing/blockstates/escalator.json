@@ -1,0 +1,19 @@
+{
+ "variants": {
+  "facing=north": {
+   "model": "amazing:block/escalator"
+  },
+  "facing=east": {
+   "model": "amazing:block/escalator",
+   "y": 90
+  },
+  "facing=south": {
+   "model": "amazing:block/escalator",
+   "y": 180
+  },
+  "facing=west": {
+   "model": "amazing:block/escalator",
+   "y": 270
+  }
+ }
+}

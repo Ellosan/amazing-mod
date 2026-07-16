@@ -20,6 +20,7 @@ public final class ModNetworking {
 		PayloadTypeRegistry.playC2S().register(HonkPayload.ID, HonkPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(BankOpPayload.ID, BankOpPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(RequestSyncPayload.ID, RequestSyncPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(PhoneChatPayload.ID, PhoneChatPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(OpenCatalogPayload.ID, OpenCatalogPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(EconomySyncPayload.ID, EconomySyncPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(OpenAtmPayload.ID, OpenAtmPayload.CODEC);
@@ -38,6 +39,31 @@ public final class ModNetworking {
 
 		ServerPlayNetworking.registerGlobalReceiver(RequestSyncPayload.ID, (payload, context) ->
 				BankManager.sync(context.player()));
+
+		ServerPlayNetworking.registerGlobalReceiver(PhoneChatPayload.ID, (payload, context) -> {
+			ServerPlayerEntity sender = context.player();
+			String message = payload.message().strip();
+			if (message.isEmpty() || message.length() > 256) {
+				return;
+			}
+			net.minecraft.text.Text text = net.minecraft.text.Text.literal("[📱 " + sender.getName().getString() + "] ")
+					.formatted(net.minecraft.util.Formatting.AQUA)
+					.append(net.minecraft.text.Text.literal(message)
+							.formatted(net.minecraft.util.Formatting.WHITE));
+			if (payload.target().isEmpty()) {
+				sender.getServer().getPlayerManager().broadcast(text, false);
+			} else {
+				ServerPlayerEntity target = sender.getServer().getPlayerManager().getPlayer(payload.target());
+				if (target != null) {
+					target.sendMessage(text, false);
+					sender.sendMessage(net.minecraft.text.Text.literal("[📱 → " + target.getName().getString() + "] " + message)
+							.formatted(net.minecraft.util.Formatting.GRAY), false);
+				} else {
+					sender.sendMessage(net.minecraft.text.Text.literal("[📱] \"" + payload.target() + "\" is not online.")
+							.formatted(net.minecraft.util.Formatting.RED), false);
+				}
+			}
+		});
 
 		ServerPlayNetworking.registerGlobalReceiver(BankOpPayload.ID, (payload, context) -> {
 			ServerPlayerEntity player = context.player();
