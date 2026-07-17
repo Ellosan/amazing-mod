@@ -1,0 +1,19 @@
+name: AmazingPaper
+version: '${version}'
+main: com.ellosan.amazing.paper.AmazingPlugin
+api-version: '1.21'
+load: STARTUP
+description: Amazing™ — Earth's Blockiest Store, for Paper servers. Shop GUI, MineBank economy, courier deliveries, quests, and a procedural city world.
+author: ellosan
+website: https://github.com/Ellosan/amazing-mod
+
+commands:
+  amazing:
+    description: Amazing™ — shop, orders, quest, balance
+    usage: /amazing [shop|orders|quest|balance]
+  bank:
+    description: Open the MineBank menu
+    usage: /bank
+  pay:
+    description: Transfer money to another player
+    usage: /pay <player> <amount>

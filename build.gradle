@@ -1,58 +1,34 @@
 plugins {
-	id 'fabric-loom' version '1.17.14'
-	id 'maven-publish'
+	id 'java'
 }
 
-version = project.mod_version
-group = project.maven_group
-
-base {
-	archivesName = project.archives_base_name
-}
+group = 'com.ellosan.amazing'
+version = '1.0.0'
 
 repositories {
-	// Add repositories to retrieve artifacts from in here.
-	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-}
-
-loom {
-	splitEnvironmentSourceSets()
-
-	mods {
-		"amazing" {
-			sourceSet sourceSets.main
-			sourceSet sourceSets.client
-		}
+	mavenCentral()
+	maven {
+		name = 'papermc'
+		url = 'https://repo.papermc.io/repository/maven-public/'
 	}
 }
 
 dependencies {
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-}
-
-processResources {
-	inputs.property "version", project.version
-
-	filesMatching("fabric.mod.json") {
-		expand "version": project.version
-	}
-}
-
-tasks.withType(JavaCompile).configureEach {
-	it.options.release = 21
+	compileOnly 'io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT'
 }
 
 java {
-	withSourcesJar()
-	sourceCompatibility = JavaVersion.VERSION_21
-	targetCompatibility = JavaVersion.VERSION_21
+	toolchain.languageVersion = JavaLanguageVersion.of(21)
 }
 
-jar {
-	from("LICENSE") {
-		rename { "${it}_${project.base.archivesName.get()}" }
+tasks.withType(JavaCompile).configureEach {
+	options.release = 21
+	options.encoding = 'UTF-8'
+}
+
+processResources {
+	inputs.property 'version', project.version
+	filesMatching('plugin.yml') {
+		expand version: project.version
 	}
 }
